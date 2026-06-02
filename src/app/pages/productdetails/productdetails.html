@@ -1,0 +1,179 @@
+<div class="container mt-4" *ngIf="productDetails">
+
+  <div class="row">
+
+    <!-- Product Image -->
+    <div class="col-md-5">
+      <img
+        [src]="productDetails.thumbnail"
+        class="img-fluid rounded shadow"
+        [alt]="productDetails.title"
+      >
+
+      <div class="mt-3">
+        <img
+          [src]="productDetails.images[0]"
+          class="img-thumbnail"
+          width="100"
+          alt="Product Image"
+        >
+      </div>
+    </div>
+
+    <!-- Product Details -->
+    <div class="col-md-7">
+
+      <h2>{{ productDetails.title }}</h2>
+
+      <span class="badge bg-primary">
+        {{ productDetails.category }}
+      </span>
+
+      <p class="mt-3">
+        {{ productDetails.description }}
+      </p>
+
+      <h3 class="text-success">
+        ₹{{ productDetails.price }}
+      </h3>
+
+      <p><strong>Discount:</strong> {{ productDetails.discountPercentage }}%</p>
+
+      <p><strong>Rating:</strong> ⭐ {{ productDetails.rating }}</p>
+
+      <p><strong>Brand:</strong> {{ productDetails.brand }}</p>
+
+      <p><strong>SKU:</strong> {{ productDetails.sku }}</p>
+
+      <p><strong>Stock:</strong> {{ productDetails.stock }}</p>
+
+      <p>
+        <strong>Status:</strong>
+        <span class="badge bg-success">
+          {{ productDetails.availabilityStatus }}
+        </span>
+      </p>
+
+      <p><strong>Weight:</strong> {{ productDetails.weight }} kg</p>
+
+      <p>
+        <strong>Minimum Order Quantity:</strong>
+        {{ productDetails.minimumOrderQuantity }}
+      </p>
+
+      <button class="btn btn-success me-2">
+        Add To Cart
+      </button>
+
+      <button class="btn btn-warning">
+        Buy Now
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Dimensions -->
+  <div class="card mt-4">
+    <div class="card-header">
+      Product Dimensions
+    </div>
+
+    <div class="card-body">
+      <p><strong>Width:</strong> {{ productDetails.dimensions.width }}</p>
+      <p><strong>Height:</strong> {{ productDetails.dimensions.height }}</p>
+      <p><strong>Depth:</strong> {{ productDetails.dimensions.depth }}</p>
+    </div>
+  </div>
+
+  <!-- Shipping -->
+  <div class="card mt-4">
+    <div class="card-header">
+      Shipping Details
+    </div>
+
+    <div class="card-body">
+      <p><strong>Shipping:</strong> {{ productDetails.shippingInformation }}</p>
+      <p><strong>Warranty:</strong> {{ productDetails.warrantyInformation }}</p>
+      <p><strong>Return Policy:</strong> {{ productDetails.returnPolicy }}</p>
+    </div>
+  </div>
+
+  <!-- Tags -->
+  <div class="card mt-4">
+    <div class="card-header">
+      Tags
+    </div>
+
+    <div class="card-body">
+      <span class="badge bg-secondary me-2">
+        {{ productDetails.tags[0] }}
+      </span>
+
+      <span class="badge bg-secondary">
+        {{ productDetails.tags[1] }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Reviews -->
+  <div class="card mt-4">
+    <div class="card-header">
+      Customer Reviews
+    </div>
+
+    <div class="card-body">
+
+      <div class="border-bottom pb-3 mb-3">
+        <h6>{{ productDetails.reviews[0].reviewerName }}</h6>
+        <p>⭐ {{ productDetails.reviews[0].rating }}</p>
+        <p>{{ productDetails.reviews[0].comment }}</p>
+      </div>
+
+      <div class="border-bottom pb-3 mb-3">
+        <h6>{{ productDetails.reviews[1].reviewerName }}</h6>
+        <p>⭐ {{ productDetails.reviews[1].rating }}</p>
+        <p>{{ productDetails.reviews[1].comment }}</p>
+      </div>
+
+      <div>
+        <h6>{{ productDetails.reviews[2].reviewerName }}</h6>
+        <p>⭐ {{ productDetails.reviews[2].rating }}</p>
+        <p>{{ productDetails.reviews[2].comment }}</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Additional Information -->
+  <div class="card mt-4 mb-5">
+    <div class="card-header">
+      Additional Information
+    </div>
+
+    <div class="card-body">
+
+      <p>
+        <strong>Barcode:</strong>
+        {{ productDetails.meta.barcode }}
+      </p>
+
+      <p>
+        <strong>Created:</strong>
+        {{ productDetails.meta.createdAt | date }}
+      </p>
+
+      <p>
+        <strong>Updated:</strong>
+        {{ productDetails.meta.updatedAt | date }}
+      </p>
+
+      <img
+        [src]="productDetails.meta.qrCode"
+        width="120"
+        alt="QR Code"
+      >
+
+    </div>
+  </div>
+
+</div>
