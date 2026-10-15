@@ -1,0 +1,10 @@
+.admin-nav-link {
+  transition: all 0.25s ease;
+  position: relative;
+  letter-spacing: 0.03em;
+}
+
+.admin-nav-link:hover {
+  color: #facc15 !important;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+}

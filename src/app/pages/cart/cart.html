@@ -1,0 +1,156 @@
+<div class="container my-5">
+  <!-- Order Success Screen -->
+  @if (orderSuccess()) {
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card success-card text-center p-5 shadow-lg border-0 rounded-4">
+          <div class="success-icon mb-4">
+            <span class="display-1 text-success">🎉</span>
+          </div>
+          <h2 class="fw-bold text-success mb-2">Order Confirmed!</h2>
+          <p class="text-muted mb-4">Your groceries are on the way. Sit back and relax!</p>
+
+          <!-- Delivery ETA Box -->
+          <div class="eta-box p-4 bg-light rounded-3 mb-4 d-inline-block w-100 border border-success-subtle">
+            <div class="d-flex justify-content-around align-items-center mb-3">
+              <span class="fs-4">🛵</span>
+              <div>
+                <h4 class="m-0 fw-bold text-dark">Arriving in {{ orderSuccess().etaMinutes }} mins</h4>
+                <small class="text-muted">Instamart Superfast Delivery</small>
+              </div>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 75%"></div>
+            </div>
+          </div>
+
+          <!-- Order Summary Details -->
+          <div class="order-details-box text-start bg-light p-4 rounded-3 mb-4">
+            <p class="mb-2"><strong>Order ID:</strong> <code class="text-primary">{{ orderSuccess().id }}</code></p>
+            <p class="mb-2"><strong>Deliver to:</strong> {{ orderSuccess().user.name }}</p>
+            <p class="mb-2"><strong>Address:</strong> {{ orderSuccess().user.address }}</p>
+            <p class="mb-0"><strong>Total Paid:</strong> <strong class="text-success">₹{{ orderSuccess().total }}</strong></p>
+          </div>
+
+          <div class="d-flex justify-content-center gap-3">
+            <a routerLink="/product" class="btn btn-primary px-4 py-2">Continue Shopping</a>
+            <a routerLink="/orders" class="btn btn-outline-secondary px-4 py-2">View Order History</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- Active Cart Screen -->
+    <h1 class="fw-bold mb-4">Shopping Cart ({{ cartService.cartCount() }} items)</h1>
+
+    @if (cartService.cartCount() === 0) {
+      <div class="text-center py-5">
+        <span class="display-1 text-muted">🛒</span>
+        <h3 class="mt-3 text-muted">Your cart is empty</h3>
+        <p class="text-muted mb-4">Add items from our store to checkout.</p>
+        <a routerLink="/product" class="btn btn-primary px-4 py-2">Shop Products</a>
+      </div>
+    } @else {
+      <div class="row">
+        <!-- Cart Items List (Left Column) -->
+        <div class="col-lg-8 mb-4">
+          <div class="card border-0 shadow-sm p-4 rounded-4">
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th style="width: 150px;">Quantity</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of cartService.cartItems(); track item.product.id) {
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <img [src]="item.product.thumbnail" [alt]="item.product.title" class="rounded me-3 border" width="60" height="60" style="object-fit: cover;">
+                          <div>
+                            <h6 class="mb-0 fw-bold">{{ item.product.title }}</h6>
+                            <small class="text-muted">{{ item.product.brand }}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>₹{{ item.product.price }}</td>
+                      <td>
+                        <div class="input-group input-group-sm quantity-selector">
+                          <button class="btn btn-outline-secondary border-0" type="button" (click)="decrementQuantity(item)">−</button>
+                          <span class="form-control text-center bg-light border-0 fw-bold" style="min-width: 40px;">{{ item.quantity }}</span>
+                          <button class="btn btn-outline-secondary border-0" type="button" (click)="incrementQuantity(item)">+</button>
+                        </div>
+                      </td>
+                      <td class="fw-bold">₹{{ item.product.price * item.quantity }}</td>
+                      <td>
+                        <button class="btn btn-link text-danger p-0 border-0" (click)="removeItem(item)">🗑️</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary & Checkout (Right Column) -->
+        <div class="col-lg-4">
+          <!-- Summary Box -->
+          <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-light">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Bill Details</h5>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Item Total</span>
+              <span>₹{{ cartService.cartTotal() }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Delivery Partner Fee</span>
+              <span class="text-success">FREE</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
+              <span class="text-muted">Handling Charges & Taxes</span>
+              <span>₹15</span>
+            </div>
+            <div class="d-flex justify-content-between mb-0 fw-bold fs-5">
+              <span>To Pay</span>
+              <span class="text-success">₹{{ cartService.cartTotal() + 15 }}</span>
+            </div>
+          </div>
+
+          <!-- Checkout Details Form -->
+          <div class="card border-0 shadow-sm p-4 rounded-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Delivery Details</h5>
+            <form (ngSubmit)="onSubmitCheckout()" #checkoutForm="ngForm">
+              <div class="mb-3">
+                <label for="name" class="form-label text-muted small fw-bold">DELIVER TO</label>
+                <input type="text" class="form-control rounded-3" id="name" name="name" [(ngModel)]="name" placeholder="Enter your name" required>
+              </div>
+
+              <div class="mb-3">
+                <label for="phone" class="form-label text-muted small fw-bold">CONTACT NUMBER</label>
+                <input type="tel" class="form-control rounded-3" id="phone" name="phone" [(ngModel)]="phone" placeholder="Enter phone number" required>
+              </div>
+
+              <div class="mb-3">
+                <label for="address" class="form-label text-muted small fw-bold">DELIVERY ADDRESS</label>
+                <textarea class="form-control rounded-3" id="address" name="address" [(ngModel)]="address" rows="3" placeholder="Enter full address" required></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-success w-100 py-3 rounded-3 fw-bold mt-2" [disabled]="placingOrder || !name || !phone || !address">
+                @if (placingOrder) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Placing Order...
+                } @else {
+                  Place Order (Pay ₹{{ cartService.cartTotal() + 15 }})
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

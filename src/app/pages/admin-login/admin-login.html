@@ -1,0 +1,110 @@
+<div class="admin-login-wrapper d-flex align-items-center justify-content-center min-vh-100">
+  <div class="admin-login-container p-4 p-md-5">
+
+    <!-- Top Security Header -->
+    <div class="text-center mb-4">
+      <div class="security-badge-icon d-inline-flex align-items-center justify-content-center rounded-circle mb-3 shadow">
+        <i class="bi bi-shield-lock-fill display-6 text-warning"></i>
+      </div>
+      <h2 class="fw-bolder text-white tracking-wide m-0">INSTAMART ADMIN</h2>
+      <p class="text-white-50 small mt-1 mb-0">
+        Operations Management & Order Tracking Gateway
+      </p>
+      <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 mt-2 small fw-bold">
+        <i class="bi bi-lock-fill me-1"></i> RESTRICTED ACCESS
+      </span>
+    </div>
+
+    <!-- Login Card -->
+    <div class="card admin-login-card border-0 shadow-lg rounded-4 p-4 text-white">
+
+      @if (errorMessage()) {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small d-flex align-items-center gap-2 mb-3" role="alert">
+          <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+          <div>{{ errorMessage() }}</div>
+          <button type="button" class="btn-close btn-close-white" (click)="errorMessage.set(null)" aria-label="Close"></button>
+        </div>
+      }
+
+      <form (ngSubmit)="onSubmit()">
+
+        <!-- Username / Email Field -->
+        <div class="mb-3">
+          <label class="form-label small text-uppercase text-white-50 fw-bold">Admin Username or Email</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark-subtle border-secondary text-white-50">
+              <i class="bi bi-person-badge-fill"></i>
+            </span>
+            <input type="text"
+                   class="form-control bg-dark text-white border-secondary"
+                   placeholder="Enter your email"
+                   [ngModel]="username()"
+                   (ngModelChange)="username.set($event)"
+                   name="username"
+                   required
+                   autocomplete="username">
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="mb-4">
+          <label class="form-label small text-uppercase text-white-50 fw-bold">Password</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark-subtle border-secondary text-white-50">
+              <i class="bi bi-key-fill"></i>
+            </span>
+            <input [type]="showPassword() ? 'text' : 'password'"
+                   class="form-control bg-dark text-white border-secondary"
+                   placeholder="Enter your password"
+                   [ngModel]="password()"
+                   (ngModelChange)="password.set($event)"
+                   name="password"
+                   required
+                   autocomplete="current-password">
+            <button class="btn btn-outline-secondary text-white-50" type="button" (click)="togglePasswordVisibility()">
+              <i class="bi" [ngClass]="showPassword() ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit"
+                class="btn btn-warning w-100 py-3 fw-bold rounded-pill text-dark shadow d-flex align-items-center justify-content-center gap-2 mb-3"
+                [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span>Verifying Credentials...</span>
+          } @else {
+            <i class="bi bi-box-arrow-in-right fs-5"></i>
+            <span>Log In to Admin Console</span>
+          }
+        </button>
+
+      </form>
+
+      <!-- Demo Shortcut Credentials Button -->
+      <div class="p-3 rounded-3 bg-dark-subtle border border-secondary mt-2">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-white-50 fw-bold"><i class="bi bi-info-circle me-1"></i> Default Demo Credentials</small>
+          <button class="btn btn-sm btn-outline-warning py-0 px-2 rounded-pill fs-8 fw-bold" (click)="fillAdminCredentials()">
+            Auto-Fill
+          </button>
+        </div>
+        <div class="small text-white-50 font-monospace">
+          <div>User: <strong class="text-warning">admin@instamart.com</strong></div>
+          <div>Pass: <strong class="text-warning">admin123</strong></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Return to Store Link -->
+    <div class="text-center mt-4">
+      <a routerLink="/" class="text-white-50 text-decoration-none small d-inline-flex align-items-center gap-1 hover-light">
+        <i class="bi bi-arrow-left"></i>
+        <span>Return to Customer Store</span>
+      </a>
+    </div>
+
+  </div>
+</div>

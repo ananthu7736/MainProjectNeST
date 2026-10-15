@@ -1,0 +1,82 @@
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+}
+
+.table th, .table td {
+  padding: 0.5rem;
+}
+
+.badge {
+  font-size: 0.85rem;
+  padding: 0.4em 0.8em;
+  border-radius: 20px;
+}
+
+.eta-alert {
+  border-left: 4px solid #198754;
+}
+
+/* Stepper Tracking Pipeline */
+.tracking-pipeline {
+  position: relative;
+}
+
+.pipeline-steps::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  right: 20px;
+  height: 3px;
+  background-color: #e2e8f0;
+  z-index: 1;
+}
+
+.pipeline-step {
+  z-index: 2;
+  flex: 1;
+}
+
+.step-icon-circle {
+  width: 32px;
+  height: 32px;
+  background-color: #ffffff;
+  border: 2px solid #cbd5e1;
+  color: #94a3b8;
+  transition: all 0.25s ease;
+}
+
+.step-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 auto;
+}
+
+.pipeline-step.completed .step-icon-circle {
+  background-color: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+
+.pipeline-step.completed .step-label {
+  color: #059669;
+}
+
+.pipeline-step.active .step-icon-circle {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+  transform: scale(1.15);
+}
+
+.pipeline-step.active .step-label {
+  color: #1d4ed8;
+  font-weight: 700;
+}

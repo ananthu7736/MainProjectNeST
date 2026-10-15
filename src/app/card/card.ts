@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
-import { Input } from '@angular/core';
-import {RouterLink} from '@angular/router';
+import { Component, Input, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { CartService } from '../cart.service';
 
 @Component({
   selector: 'app-card',
@@ -11,4 +11,13 @@ import {RouterLink} from '@angular/router';
 })
 export class Card {
   @Input() product: any;
+
+  private cartService = inject(CartService);
+
+  addToCart(event: Event) {
+    event.stopPropagation();
+    if (this.product) {
+      this.cartService.addToCart(this.product);
+    }
+  }
 }

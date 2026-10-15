@@ -1,0 +1,161 @@
+<div class="container my-5" style="max-width: 900px;">
+  <h1 class="fw-bold mb-4">Your Orders</h1>
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2 text-muted">Retrieving your orders...</p>
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-danger rounded-3" role="alert">
+      {{ error() }}
+      <button class="btn btn-outline-danger btn-sm ms-3" (click)="fetchOrders()">Retry</button>
+    </div>
+  } @else if (orders().length === 0) {
+    <div class="text-center py-5 bg-light rounded-4 shadow-sm border">
+      <span class="display-1 text-muted">📦</span>
+      <h3 class="mt-3 text-muted">No orders found</h3>
+      <p class="text-muted mb-4">You haven't placed any orders yet.</p>
+      <a routerLink="/product" class="btn btn-primary px-4 py-2">Order Now</a>
+    </div>
+  } @else {
+    <div class="orders-list">
+      @for (order of orders(); track order.id) {
+        <div class="card mb-4 border-0 shadow-sm rounded-4 overflow-hidden">
+          
+          <!-- Order Header -->
+          <div class="card-header bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <span class="text-muted small">ORDER ID</span>
+              <h6 class="m-0 fw-bold"><code class="text-primary">{{ order.id }}</code></h6>
+            </div>
+            <div class="text-md-end">
+              <span class="text-muted small">DATE</span>
+              <h6 class="m-0 text-dark">{{ order.date | date:'medium' }}</h6>
+            </div>
+            <div>
+              <span class="badge px-3 py-2 rounded-pill fw-semibold" [ngClass]="{
+                'bg-success text-white': order.status === 'Delivered',
+                'bg-primary text-white': order.status === 'Out for Delivery',
+                'bg-warning text-dark': order.status === 'Preparing',
+                'bg-info text-dark': order.status === 'Confirmed',
+                'bg-secondary text-white': order.status === 'Received',
+                'bg-danger text-white': order.status === 'Cancelled'
+              }">{{ order.status }}</span>
+            </div>
+          </div>
+
+          <!-- Order Body -->
+          <div class="card-body p-4">
+
+            <!-- Stepper Tracking Pipeline -->
+            @if (order.status !== 'Cancelled') {
+              <div class="tracking-pipeline mb-4 p-3 bg-light rounded-4 border border-light-subtle">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="small fw-bold text-muted text-uppercase">
+                    <i class="bi bi-radar text-primary me-1"></i> Live Order Tracking
+                  </span>
+                  @if (order.status !== 'Delivered') {
+                    <span class="badge bg-warning-subtle text-dark border border-warning px-2 py-1 rounded-pill">
+                      Estimated Delivery: {{ order.etaMinutes }} mins
+                    </span>
+                  }
+                </div>
+
+                <div class="pipeline-steps d-flex justify-content-between position-relative pt-2">
+                  @for (stage of trackingStages; track stage.key) {
+                    <div class="pipeline-step text-center position-relative"
+                         [class.completed]="isStepCompleted(order.status, stage.key)"
+                         [class.active]="isStepActive(order.status, stage.key)">
+                      <div class="step-icon-circle rounded-circle d-flex align-items-center justify-content-center mx-auto mb-1">
+                        <i class="bi {{ stage.icon }} fs-8"></i>
+                      </div>
+                      <div class="step-label text-truncate" style="max-width: 65px;">
+                        {{ stage.label }}
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+            
+            <!-- Items ordered -->
+            <div class="mb-4">
+              <h6 class="fw-bold mb-3">Items ({{ order.items.length }})</h6>
+              <div class="table-responsive">
+                <table class="table table-borderless align-middle m-0">
+                  <tbody>
+                    @for (item of order.items; track item.product.id) {
+                      <tr>
+                        <td style="width: 50px; padding-left: 0;">
+                          <img [src]="item.product.thumbnail" [alt]="item.product.title" class="rounded border" width="40" height="40" style="object-fit: cover;">
+                        </td>
+                        <td>
+                          <span class="fw-bold text-dark">{{ item.product.title }}</span>
+                          <br>
+                          <small class="text-muted">₹{{ item.product.price }} x {{ item.quantity }}</small>
+                        </td>
+                        <td class="text-end fw-bold">₹{{ item.product.price * item.quantity }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Delivery Address -->
+            <div class="bg-light p-3 rounded-3 mb-3 border border-light-subtle">
+              <h6 class="fw-bold mb-2 small text-muted">DELIVER TO</h6>
+              <p class="m-0"><strong>Name:</strong> {{ order.user.name }}</p>
+              <p class="m-0"><strong>Phone:</strong> {{ order.user.phone }}</p>
+              <p class="m-0"><strong>Address:</strong> {{ order.user.address }}</p>
+            </div>
+
+            <!-- Delivery status tracking alert -->
+            @if (order.status === 'Delivered') {
+              <div class="eta-alert d-flex align-items-center gap-2 p-3 bg-success-subtle text-success-emphasis rounded-3 small">
+                <span>🎉</span>
+                <span>Your order was delivered safely. Thank you for choosing Instamart!</span>
+              </div>
+            } @else if (order.status === 'Out for Delivery') {
+              <div class="eta-alert d-flex align-items-center gap-2 p-3 bg-primary-subtle text-primary-emphasis rounded-3 small" style="border-left-color: #0d6efd;">
+                <span>🛵</span>
+                <span>Your delivery partner is on the way! Reaching in approximately <strong>{{ order.etaMinutes }} mins</strong>.</span>
+              </div>
+            } @else if (order.status === 'Preparing') {
+              <div class="eta-alert d-flex align-items-center gap-2 p-3 bg-warning-subtle text-warning-emphasis rounded-3 small" style="border-left-color: #ffc107;">
+                <span>👨‍🍳</span>
+                <span>Your items are currently being packed at the dark store. Delivery in <strong>{{ order.etaMinutes }} mins</strong>.</span>
+              </div>
+            } @else if (order.status === 'Confirmed') {
+              <div class="eta-alert d-flex align-items-center gap-2 p-3 bg-info-subtle text-info-emphasis rounded-3 small" style="border-left-color: #0dcaf0;">
+                <span>✅</span>
+                <span>Order confirmed by Instamart team. Getting ready for packing.</span>
+              </div>
+            } @else if (order.status === 'Cancelled') {
+              <div class="eta-alert d-flex align-items-center gap-2 p-3 bg-danger-subtle text-danger-emphasis rounded-3 small" style="border-left-color: #dc3545;">
+                <span>❌</span>
+                <span>This order was cancelled. Refund will be processed if already deducted.</span>
+              </div>
+            } @else {
+              <div class="eta-alert d-flex align-items-center gap-2 p-3 bg-secondary-subtle text-secondary-emphasis rounded-3 small">
+                <span>📥</span>
+                <span>Order received. Store partner is verifying stock and assigning rider.</span>
+              </div>
+            }
+
+          </div>
+
+          <!-- Order Footer -->
+          <div class="card-footer bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center">
+            <span class="text-muted fw-bold">Grand Total</span>
+            <span class="fs-4 fw-bold text-success">₹{{ order.total }}</span>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+</div>

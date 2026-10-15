@@ -1,0 +1,920 @@
+<!-- Dedicated Standalone Admin Console Top Bar -->
+<header class="admin-topbar bg-dark text-white px-4 py-3 shadow-sm d-flex justify-content-between align-items-center flex-wrap gap-3 mb-0">
+  <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-4">🛡️</span>
+      <div>
+        <h5 class="fw-bolder m-0 text-white tracking-wider">INSTAMART ADMIN CONSOLE</h5>
+        <small class="text-warning-emphasis font-monospace">Store Operations & Dispatch Hub</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex align-items-center gap-3">
+    <!-- Store Admin Profile -->
+    <div class="d-flex align-items-center gap-2 px-3 py-1 bg-secondary bg-opacity-25 rounded-pill border border-secondary">
+      <div class="avatar-circle bg-warning text-dark fw-bold">AD</div>
+      <div class="text-start">
+        <div class="fw-bold small text-white">{{ authService.currentUser()?.name || 'Store Administrator' }}</div>
+        <small class="text-warning" style="font-size: 0.7rem;"><i class="bi bi-shield-check"></i> Super Administrator</small>
+      </div>
+    </div>
+
+    <!-- Link to customer store -->
+    <a routerLink="/" target="_blank" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-semibold d-flex align-items-center gap-1">
+      <i class="bi bi-shop"></i>
+      <span>Customer Store</span>
+      <i class="bi bi-box-arrow-up-right fs-8"></i>
+    </a>
+
+    <!-- Admin Logout Button -->
+    <button class="btn btn-danger btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm" (click)="adminLogout()">
+      <i class="bi bi-box-arrow-right"></i>
+      <span>Sign Out</span>
+    </button>
+  </div>
+</header>
+
+<div class="admin-wrapper py-4">
+  <div class="container-fluid px-lg-5">
+
+    <!-- Top Admin Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-3 border-bottom border-secondary-subtle">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 rounded-pill fw-bold fs-7">
+            <i class="bi bi-shield-lock-fill me-1"></i> ADMIN OPERATIONS
+          </span>
+          <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fs-7">
+            <span class="live-dot"></span> System Online
+          </span>
+        </div>
+        <h1 class="h3 fw-bolder m-0 text-dark d-flex align-items-center gap-2">
+          <span>📦</span> Instamart Customer Order Management Portal
+        </h1>
+        <p class="text-muted small m-0 mt-1">
+          Monitor real-time customer orders, update tracking dispatch states, adjust ETAs, and audit complete order history.
+        </p>
+      </div>
+
+      <!-- Controls -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2" (click)="fetchOrders()">
+          <i class="bi bi-arrow-repeat" [class.spin]="loading()"></i>
+          <span>Refresh</span>
+        </button>
+
+        <button class="btn btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2"
+                [ngClass]="autoRefresh() ? 'btn-success text-white' : 'btn-outline-dark'"
+                (click)="toggleAutoRefresh()">
+          <i class="bi" [ngClass]="autoRefresh() ? 'bi-broadcast-pin' : 'bi-broadcast'"></i>
+          <span>{{ autoRefresh() ? 'Auto-Sync ON' : 'Auto-Sync' }}</span>
+        </button>
+
+        <button class="btn btn-primary btn-sm rounded-pill px-3 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm" (click)="exportCSV()">
+          <i class="bi bi-cloud-arrow-down-fill"></i>
+          <span>Export CSV</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast Notification Alerts -->
+    @if (successMessage()) {
+      <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm d-flex align-items-center gap-2 mb-4 py-2" role="alert">
+        <i class="bi bi-check-circle-fill fs-5"></i>
+        <div class="fw-medium">{{ successMessage() }}</div>
+        <button type="button" class="btn-close" (click)="successMessage.set(null)" aria-label="Close"></button>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm d-flex align-items-center gap-2 mb-4 py-2" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+        <div class="fw-medium">{{ errorMessage() }}</div>
+        <button type="button" class="btn-close" (click)="errorMessage.set(null)" aria-label="Close"></button>
+      </div>
+    }
+
+    <!-- KPI Metric Cards Row -->
+    <div class="row g-3 mb-4">
+      <!-- Total Revenue -->
+      <div class="col-6 col-lg-3">
+        <div class="kpi-card bg-gradient-emerald p-3 rounded-4 shadow-sm h-100 text-white position-relative overflow-hidden">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-white-50 text-uppercase fw-bold fs-8 tracking-wider">Total Revenue</span>
+              <h3 class="fw-bolder m-0 mt-1">₹{{ stats().totalRevenue | number:'1.2-2' }}</h3>
+              <small class="text-white-50"><i class="bi bi-graph-up-arrow me-1"></i> Lifetime Sales</small>
+            </div>
+            <div class="kpi-icon-bubble">
+              <i class="bi bi-currency-rupee"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Orders -->
+      <div class="col-6 col-lg-3">
+        <div class="kpi-card bg-gradient-blue p-3 rounded-4 shadow-sm h-100 text-white position-relative overflow-hidden">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-white-50 text-uppercase fw-bold fs-8 tracking-wider">Total Orders</span>
+              <h3 class="fw-bolder m-0 mt-1">{{ stats().totalOrders }}</h3>
+              <small class="text-white-50">All registered orders</small>
+            </div>
+            <div class="kpi-icon-bubble">
+              <i class="bi bi-bag-check-fill"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active / Tracking Orders -->
+      <div class="col-6 col-lg-3">
+        <div class="kpi-card bg-gradient-amber p-3 rounded-4 shadow-sm h-100 text-white position-relative overflow-hidden">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-white-50 text-uppercase fw-bold fs-8 tracking-wider">Active In-Transit</span>
+              <h3 class="fw-bolder m-0 mt-1">{{ stats().activeOrders }}</h3>
+              <small class="text-white-50"><span class="pulse-dot"></span> Live Tracking active</small>
+            </div>
+            <div class="kpi-icon-bubble">
+              <i class="bi bi-scooter"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivered / Completed Orders -->
+      <div class="col-6 col-lg-3">
+        <div class="kpi-card bg-gradient-purple p-3 rounded-4 shadow-sm h-100 text-white position-relative overflow-hidden">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-white-50 text-uppercase fw-bold fs-8 tracking-wider">Delivered & Closed</span>
+              <h3 class="fw-bolder m-0 mt-1">{{ stats().deliveredOrders }}</h3>
+              <small class="text-white-50">Avg Order: ₹{{ stats().avgOrderValue }}</small>
+            </div>
+            <div class="kpi-icon-bubble">
+              <i class="bi bi-patch-check-fill"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 border-bottom">
+      <ul class="nav nav-pills custom-tabs m-0">
+        <li class="nav-item">
+          <button class="nav-link py-2 px-3 fw-bold rounded-pill d-flex align-items-center gap-2"
+                  [class.active]="activeTab() === 'active'"
+                  (click)="activeTab.set('active')">
+            <i class="bi bi-lightning-charge-fill"></i>
+            <span>Active Orders & Tracking</span>
+            <span class="badge rounded-pill" [ngClass]="activeTab() === 'active' ? 'bg-light text-dark' : 'bg-warning text-dark'">
+              {{ stats().activeOrders }}
+            </span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link py-2 px-3 fw-bold rounded-pill d-flex align-items-center gap-2"
+                  [class.active]="activeTab() === 'history'"
+                  (click)="activeTab.set('history')">
+            <i class="bi bi-clock-history"></i>
+            <span>Order History & Archive</span>
+            <span class="badge rounded-pill" [ngClass]="activeTab() === 'history' ? 'bg-light text-dark' : 'bg-secondary text-white'">
+              {{ stats().deliveredOrders + stats().cancelledOrders }}
+            </span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link py-2 px-3 fw-bold rounded-pill d-flex align-items-center gap-2"
+                  [class.active]="activeTab() === 'analytics'"
+                  (click)="activeTab.set('analytics')">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            <span>Operations & Analytics</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- TAB 1 & 2: Active Orders / Order History -->
+    @if (activeTab() === 'active' || activeTab() === 'history') {
+
+      <!-- Filters & Search Toolbar -->
+      <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+        <div class="row g-3 align-items-center">
+
+          <!-- Search Query Input -->
+          <div class="col-12 col-md-4">
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 rounded-start-pill text-muted">
+                <i class="bi bi-search"></i>
+              </span>
+              <input type="text"
+                     class="form-control bg-light border-start-0 rounded-end-pill ps-0"
+                     placeholder="Search by Order ID, customer name, phone, item..."
+                     [ngModel]="searchQuery()"
+                     (ngModelChange)="searchQuery.set($event)">
+              @if (searchQuery()) {
+                <button class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y z-3" (click)="searchQuery.set('')">
+                  <i class="bi bi-x-circle-fill"></i>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Status Filter Buttons / Dropdown -->
+          <div class="col-12 col-md-5">
+            <div class="d-flex flex-wrap gap-1 align-items-center">
+              <button class="btn btn-sm rounded-pill px-3"
+                      [ngClass]="statusFilter() === 'ALL' ? 'btn-dark' : 'btn-outline-secondary'"
+                      (click)="statusFilter.set('ALL')">
+                All ({{ orders().length }})
+              </button>
+
+              @if (activeTab() === 'active') {
+                <button class="btn btn-sm rounded-pill px-2"
+                        [ngClass]="statusFilter() === 'Received' ? 'btn-primary' : 'btn-outline-primary'"
+                        (click)="statusFilter.set('Received')">
+                  Received ({{ countByStatus('Received') }})
+                </button>
+                <button class="btn btn-sm rounded-pill px-2"
+                        [ngClass]="statusFilter() === 'Confirmed' ? 'btn-info text-dark' : 'btn-outline-info'"
+                        (click)="statusFilter.set('Confirmed')">
+                  Confirmed ({{ countByStatus('Confirmed') }})
+                </button>
+                <button class="btn btn-sm rounded-pill px-2"
+                        [ngClass]="statusFilter() === 'Preparing' ? 'btn-warning text-dark' : 'btn-outline-warning'"
+                        (click)="statusFilter.set('Preparing')">
+                  Packing ({{ countByStatus('Preparing') }})
+                </button>
+                <button class="btn btn-sm rounded-pill px-2"
+                        [ngClass]="statusFilter() === 'Out for Delivery' ? 'btn-primary' : 'btn-outline-primary'"
+                        (click)="statusFilter.set('Out for Delivery')">
+                  Out for Delivery ({{ countByStatus('Out for Delivery') }})
+                </button>
+              } @else {
+                <button class="btn btn-sm rounded-pill px-3"
+                        [ngClass]="statusFilter() === 'Delivered' ? 'btn-success' : 'btn-outline-success'"
+                        (click)="statusFilter.set('Delivered')">
+                  Delivered ({{ countByStatus('Delivered') }})
+                </button>
+                <button class="btn btn-sm rounded-pill px-3"
+                        [ngClass]="statusFilter() === 'Cancelled' ? 'btn-danger' : 'btn-outline-danger'"
+                        (click)="statusFilter.set('Cancelled')">
+                  Cancelled ({{ countByStatus('Cancelled') }})
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Date & Sort Selectors -->
+          <div class="col-12 col-md-3">
+            <div class="d-flex gap-2">
+              <select class="form-select form-select-sm rounded-pill" [ngModel]="dateFilter()" (ngModelChange)="dateFilter.set($event)">
+                <option value="ALL">All Dates</option>
+                <option value="TODAY">Today</option>
+                <option value="WEEK">Past 7 Days</option>
+              </select>
+
+              <select class="form-select form-select-sm rounded-pill" [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event)">
+                <option value="NEWEST">Newest First</option>
+                <option value="OLDEST">Oldest First</option>
+                <option value="HIGHEST">Amount: High ➔ Low</option>
+                <option value="LOWEST">Amount: Low ➔ High</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Orders Content Area -->
+      @if (loading()) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading orders...</span>
+          </div>
+          <p class="mt-3 text-muted fw-semibold">Fetching customer orders and tracking data...</p>
+        </div>
+      } @else if (filteredOrders().length === 0) {
+        <div class="empty-state text-center py-5 bg-white rounded-4 shadow-sm border border-light-subtle">
+          <div class="empty-icon mb-3">
+            <i class="bi bi-inbox text-muted display-4"></i>
+          </div>
+          <h4 class="fw-bold text-dark mb-1">No Orders Found</h4>
+          <p class="text-muted small mb-3">
+            No orders match your selected filters or search criteria.
+          </p>
+          <button class="btn btn-outline-primary btn-sm rounded-pill px-4" (click)="searchQuery.set(''); statusFilter.set('ALL'); dateFilter.set('ALL');">
+            Clear Filters
+          </button>
+        </div>
+      } @else {
+
+        <!-- List of Order Cards -->
+        <div class="orders-stream">
+          @for (order of filteredOrders(); track order.id) {
+            <div class="order-card card border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative">
+
+              <!-- Updating Overlay -->
+              @if (updatingOrderId() === order.id) {
+                <div class="order-updating-overlay d-flex align-items-center justify-content-center">
+                  <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                  <span class="fw-bold text-dark small">Updating order status...</span>
+                </div>
+              }
+
+              <!-- Header Bar of Order Card -->
+              <div class="card-header bg-light-subtle border-bottom border-light-subtle py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-3">
+                  <span class="order-id-badge fw-bold font-monospace px-3 py-1 rounded-pill">
+                    {{ order.id }}
+                  </span>
+                  <span class="text-muted small d-flex align-items-center gap-1">
+                    <i class="bi bi-calendar3"></i> {{ order.date | date:'medium' }}
+                  </span>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                  <!-- Order Status Badge -->
+                  <span class="badge px-3 py-2 rounded-pill fs-7 d-flex align-items-center gap-1" [ngClass]="{
+                    'bg-primary-subtle text-primary border border-primary-subtle': order.status === 'Received',
+                    'bg-info-subtle text-info-emphasis border border-info-subtle': order.status === 'Confirmed',
+                    'bg-warning-subtle text-warning-emphasis border border-warning-subtle': order.status === 'Preparing',
+                    'bg-primary text-white': order.status === 'Out for Delivery',
+                    'bg-success-subtle text-success border border-success-subtle': order.status === 'Delivered',
+                    'bg-danger-subtle text-danger border border-danger-subtle': order.status === 'Cancelled'
+                  }">
+                    <i class="bi" [ngClass]="{
+                      'bi-inbox-fill': order.status === 'Received',
+                      'bi-patch-check-fill': order.status === 'Confirmed',
+                      'bi-box-seam-fill': order.status === 'Preparing',
+                      'bi-scooter': order.status === 'Out for Delivery',
+                      'bi-check-circle-fill': order.status === 'Delivered',
+                      'bi-x-circle-fill': order.status === 'Cancelled'
+                    }"></i>
+                    <span>{{ order.status }}</span>
+                  </span>
+
+                  <!-- ETA Pill if active -->
+                  @if (order.status !== 'Delivered' && order.status !== 'Cancelled') {
+                    <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 rounded-pill fs-7">
+                      <i class="bi bi-stopwatch"></i> ETA: {{ order.etaMinutes }}m
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <!-- Body of Order Card -->
+              <div class="card-body p-4">
+                <div class="row g-4">
+
+                  <!-- Column 1: Customer Details -->
+                  <div class="col-12 col-lg-4 border-end-lg border-light-subtle pe-lg-4">
+                    <div class="customer-info-box">
+                      <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="customer-avatar rounded-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center">
+                          {{ (order.user.name.charAt(0) || 'U') | uppercase }}
+                        </div>
+                        <div>
+                          <h6 class="fw-bold m-0 text-dark">{{ order.user.name }}</h6>
+                          <small class="text-muted"><i class="bi bi-person-badge"></i> Verified Customer</small>
+                        </div>
+                      </div>
+
+                      <div class="detail-row mb-2">
+                        <span class="text-muted small"><i class="bi bi-telephone-fill me-1 text-primary"></i> Phone:</span>
+                        <a [href]="'tel:' + order.user.phone" class="fw-semibold text-decoration-none ms-1 text-dark">
+                          {{ order.user.phone }}
+                        </a>
+                      </div>
+
+                      <div class="detail-row mb-3">
+                        <span class="text-muted small"><i class="bi bi-geo-alt-fill me-1 text-danger"></i> Address:</span>
+                        <p class="m-0 text-dark small fw-medium mt-1 p-2 bg-light rounded-3 border border-light-subtle">
+                          {{ order.user.address }}
+                        </p>
+                      </div>
+
+                      <!-- Quick Customer Contact links -->
+                      <div class="d-flex gap-2">
+                        <a [href]="'tel:' + order.user.phone" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 flex-grow-1 text-center">
+                          <i class="bi bi-telephone"></i> Call
+                        </a>
+                        <a [href]="'https://www.google.com/maps/search/?api=1&query=' + order.user.address"
+                           target="_blank"
+                           class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 flex-grow-1 text-center">
+                          <i class="bi bi-map"></i> Maps
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Column 2: Order Items & Pricing -->
+                  <div class="col-12 col-lg-4 border-end-lg border-light-subtle px-lg-4">
+                    <h6 class="fw-bold small text-muted text-uppercase mb-3 d-flex justify-content-between align-items-center">
+                      <span>Order Items ({{ order.items.length }})</span>
+                      <span class="badge bg-light text-dark border">COD / Paid</span>
+                    </h6>
+
+                    <div class="items-scroll-list" style="max-height: 180px; overflow-y: auto;">
+                      @for (item of order.items; track item.product.id) {
+                        <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-light-subtle">
+                          <div class="d-flex align-items-center gap-2">
+                            <img [src]="item.product.thumbnail || 'https://via.placeholder.com/40'"
+                                 [alt]="item.product.title"
+                                 class="rounded border bg-light"
+                                 width="42" height="42"
+                                 style="object-fit: cover;">
+                            <div>
+                              <div class="fw-semibold text-dark small text-truncate" style="max-width: 170px;">
+                                {{ item.product.title }}
+                              </div>
+                              <small class="text-muted">₹{{ item.product.price }} × {{ item.quantity }}</small>
+                            </div>
+                          </div>
+                          <div class="fw-bold text-dark small">
+                            ₹{{ (item.product.price * item.quantity) | number:'1.2-2' }}
+                          </div>
+                        </div>
+                      }
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 mt-2 border-top">
+                      <span class="fw-bold text-muted small">Grand Total</span>
+                      <span class="fs-4 fw-bolder text-success">₹{{ order.total | number:'1.2-2' }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Column 3: Live Tracking Status & Dispatch Control -->
+                  <div class="col-12 col-lg-4 ps-lg-4 d-flex flex-column justify-content-between">
+                    <div>
+                      <h6 class="fw-bold small text-muted text-uppercase mb-3">
+                        <i class="bi bi-pin-map-fill text-danger me-1"></i> Live Order Tracking
+                      </h6>
+
+                      <!-- Interactive Tracking Pipeline -->
+                      <div class="tracking-pipeline mb-3">
+                        <div class="pipeline-steps d-flex justify-content-between position-relative">
+                          @for (stage of trackingStages; track stage.key; let i = $index) {
+                            <div class="pipeline-step text-center position-relative"
+                                 [class.completed]="isStepCompleted(order.status, stage.key)"
+                                 [class.active]="isStepActive(order.status, stage.key)">
+                              <div class="step-icon-circle rounded-circle d-flex align-items-center justify-content-center mx-auto mb-1">
+                                <i class="bi {{ stage.icon }} fs-8"></i>
+                              </div>
+                              <div class="step-label text-truncate" style="max-width: 55px;">
+                                {{ stage.label }}
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </div>
+
+                      <!-- Tracking Status Message -->
+                      <div class="tracking-alert-box p-2 rounded-3 small mb-3" [ngClass]="{
+                        'bg-success-subtle text-success-emphasis border border-success-subtle': order.status === 'Delivered',
+                        'bg-primary-subtle text-primary-emphasis border border-primary-subtle': order.status === 'Out for Delivery',
+                        'bg-light text-muted border border-light-subtle': order.status !== 'Delivered' && order.status !== 'Out for Delivery'
+                      }">
+                        @if (order.status === 'Delivered') {
+                          <span><i class="bi bi-check-circle-fill me-1"></i> Successfully delivered to customer.</span>
+                        } @else if (order.status === 'Out for Delivery') {
+                          <span><i class="bi bi-scooter me-1"></i> Delivery partner en route (ETA ~{{ order.etaMinutes }} mins).</span>
+                        } @else if (order.status === 'Preparing') {
+                          <span><i class="bi bi-box-seam me-1"></i> Items are being packed in the dark store.</span>
+                        } @else if (order.status === 'Confirmed') {
+                          <span><i class="bi bi-patch-check me-1"></i> Order accepted and sent to dispatch queue.</span>
+                        } @else {
+                          <span><i class="bi bi-inbox me-1"></i> New order received from customer.</span>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Action Controls for Status Advancement -->
+                    <div class="order-actions pt-2">
+                      <div class="d-flex flex-wrap gap-2 mb-2">
+
+                        <!-- Smart 1-click Advance Status Button -->
+                        @if (getNextActionLabel(order.status)) {
+                          <button class="btn btn-success btn-sm rounded-pill fw-bold flex-grow-1 d-flex align-items-center justify-content-center gap-1 shadow-sm"
+                                  (click)="advanceStatus(order)">
+                            <span>{{ getNextActionLabel(order.status) }}</span>
+                          </button>
+                        }
+
+                        <!-- Status Selector Dropdown -->
+                        <div class="dropdown">
+                          <button class="btn btn-outline-secondary btn-sm rounded-pill dropdown-toggle fw-semibold"
+                                  type="button"
+                                  data-bs-toggle="dropdown"
+                                  aria-expanded="false">
+                            Change Status
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li><h6 class="dropdown-header small">Set Order Status</h6></li>
+                            <li><button class="dropdown-item" (click)="updateStatus(order, 'Received')">📥 Received</button></li>
+                            <li><button class="dropdown-item" (click)="updateStatus(order, 'Confirmed', 20)">✅ Confirmed</button></li>
+                            <li><button class="dropdown-item" (click)="updateStatus(order, 'Preparing', 15)">📦 Preparing / Packing</button></li>
+                            <li><button class="dropdown-item" (click)="updateStatus(order, 'Out for Delivery', 10)">🛵 Out for Delivery</button></li>
+                            <li><button class="dropdown-item text-success fw-bold" (click)="updateStatus(order, 'Delivered', 0)">🎉 Mark Delivered</button></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button class="dropdown-item text-danger" (click)="updateStatus(order, 'Cancelled', 0)">❌ Cancel Order</button></li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <!-- Secondary Modal Buttons -->
+                      <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3 flex-grow-1" (click)="openTracking(order)">
+                          <i class="bi bi-radar"></i> Detailed Tracker
+                        </button>
+                        <button class="btn btn-outline-dark btn-sm rounded-pill px-3" (click)="openInvoice(order)">
+                          <i class="bi bi-receipt"></i> Invoice
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm rounded-circle p-2" title="Delete Order" (click)="deleteOrder(order)">
+                          <i class="bi bi-trash3"></i>
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          }
+        </div>
+      }
+
+    }
+
+    <!-- TAB 3: Operational Analytics -->
+    @if (activeTab() === 'analytics') {
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <h4 class="fw-bold mb-4 d-flex align-items-center gap-2">
+          <span>📊</span> Store Performance & Logistics Summary
+        </h4>
+
+        <div class="row g-4">
+          <!-- Status Distribution -->
+          <div class="col-12 col-md-6">
+            <div class="p-4 bg-light rounded-4 border border-light-subtle h-100">
+              <h6 class="fw-bold text-dark mb-3">Order Status Distribution</h6>
+              
+              <div class="status-dist-item mb-3">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                  <span>Delivered & Completed</span>
+                  <span class="text-success">{{ countByStatus('Delivered') }} orders</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                  <div class="progress-bar bg-success" [style.width.%]="orders().length ? (countByStatus('Delivered') / orders().length * 100) : 0"></div>
+                </div>
+              </div>
+
+              <div class="status-dist-item mb-3">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                  <span>Out for Delivery (In-Transit)</span>
+                  <span class="text-primary">{{ countByStatus('Out for Delivery') }} orders</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                  <div class="progress-bar bg-primary" [style.width.%]="orders().length ? (countByStatus('Out for Delivery') / orders().length * 100) : 0"></div>
+                </div>
+              </div>
+
+              <div class="status-dist-item mb-3">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                  <span>Preparing / Packing</span>
+                  <span class="text-warning">{{ countByStatus('Preparing') }} orders</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                  <div class="progress-bar bg-warning" [style.width.%]="orders().length ? (countByStatus('Preparing') / orders().length * 100) : 0"></div>
+                </div>
+              </div>
+
+              <div class="status-dist-item mb-3">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                  <span>Confirmed & Queue</span>
+                  <span class="text-info">{{ countByStatus('Confirmed') }} orders</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                  <div class="progress-bar bg-info" [style.width.%]="orders().length ? (countByStatus('Confirmed') / orders().length * 100) : 0"></div>
+                </div>
+              </div>
+
+              <div class="status-dist-item mb-3">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                  <span>New Received</span>
+                  <span class="text-secondary">{{ countByStatus('Received') }} orders</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                  <div class="progress-bar bg-secondary" [style.width.%]="orders().length ? (countByStatus('Received') / orders().length * 100) : 0"></div>
+                </div>
+              </div>
+
+              <div class="status-dist-item">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                  <span>Cancelled</span>
+                  <span class="text-danger">{{ countByStatus('Cancelled') }} orders</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                  <div class="progress-bar bg-danger" [style.width.%]="orders().length ? (countByStatus('Cancelled') / orders().length * 100) : 0"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Metrics & Operational Efficiency -->
+          <div class="col-12 col-md-6">
+            <div class="p-4 bg-light rounded-4 border border-light-subtle h-100">
+              <h6 class="fw-bold text-dark mb-3">Operational Highlights</h6>
+              <div class="row g-3">
+                <div class="col-6">
+                  <div class="p-3 bg-white rounded-3 border">
+                    <span class="text-muted small">Average Order Value</span>
+                    <h4 class="fw-bold text-dark m-0 mt-1">₹{{ stats().avgOrderValue }}</h4>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-3 bg-white rounded-3 border">
+                    <span class="text-muted small">Fulfillment Rate</span>
+                    <h4 class="fw-bold text-success m-0 mt-1">
+                      {{ orders().length ? ((stats().deliveredOrders / orders().length) * 100 | number:'1.0-0') : 100 }}%
+                    </h4>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-3 bg-white rounded-3 border">
+                    <span class="text-muted small">Average Delivery Time</span>
+                    <h4 class="fw-bold text-primary m-0 mt-1">14.5 mins</h4>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-3 bg-white rounded-3 border">
+                    <span class="text-muted small">Store Dispatch Hub</span>
+                    <h4 class="fw-bold text-dark m-0 mt-1">Hub #01 (Active)</h4>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 p-3 bg-success-subtle text-success-emphasis rounded-3 border border-success-subtle small">
+                <i class="bi bi-check-circle-fill me-1"></i>
+                Store dispatch SLA is running at optimal peak. Standard orders dispatched in under 7 minutes.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- MODAL 1: Detailed Order Tracking & Dispatch Dialog -->
+@if (showTrackingModal() && selectedOrder()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        
+        <!-- Modal Header -->
+        <div class="modal-header bg-dark text-white py-3 px-4">
+          <div>
+            <span class="badge bg-danger rounded-pill px-2 py-1 small me-2">LIVE TRACKER</span>
+            <span class="font-monospace fw-bold">{{ selectedOrder()?.id }}</span>
+          </div>
+          <button type="button" class="btn-close btn-close-white" (click)="closeModals()" aria-label="Close"></button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body p-4">
+          <div class="row g-4">
+
+            <!-- Stepper Timeline -->
+            <div class="col-12 col-md-7 border-end-md">
+              <h6 class="fw-bold text-dark mb-3">Tracking Milestones & Timeline</h6>
+
+              <div class="stepper-timeline">
+                @for (stage of trackingStages; track stage.key; let i = $index) {
+                  <div class="timeline-item d-flex gap-3 pb-3"
+                       [class.is-done]="isStepCompleted(selectedOrder()!.status, stage.key)"
+                       [class.is-current]="isStepActive(selectedOrder()!.status, stage.key)">
+                    
+                    <div class="timeline-indicator-col d-flex flex-column align-items-center">
+                      <div class="timeline-circle rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi {{ stage.icon }} fs-7"></i>
+                      </div>
+                      @if (i < trackingStages.length - 1) {
+                        <div class="timeline-line flex-grow-1"></div>
+                      }
+                    </div>
+
+                    <div class="timeline-content-col">
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold text-dark">{{ stage.label }}</span>
+                        @if (isStepActive(selectedOrder()!.status, stage.key)) {
+                          <span class="badge bg-primary rounded-pill small">Current Stage</span>
+                        }
+                      </div>
+                      <small class="text-muted d-block mt-1">
+                        @if (stage.key === 'Received') {
+                          Order placed by customer and registered in Instamart database.
+                        } @else if (stage.key === 'Confirmed') {
+                          Order acknowledged by store staff; inventory reserved.
+                        } @else if (stage.key === 'Preparing') {
+                          Packed in eco-friendly bag with temperature-controlled pouch.
+                        } @else if (stage.key === 'Out for Delivery') {
+                          Dispatched with express delivery partner. Live GPS tracking active.
+                        } @else if (stage.key === 'Delivered') {
+                          Handed over to customer at delivery address.
+                        }
+                      </small>
+                    </div>
+
+                  </div>
+                }
+              </div>
+
+              <!-- Quick Status Switch inside Modal -->
+              <div class="p-3 bg-light rounded-3 mt-3 border">
+                <span class="small fw-bold text-dark d-block mb-2">Advance Stage:</span>
+                <div class="d-flex flex-wrap gap-2">
+                  <button class="btn btn-sm btn-outline-primary rounded-pill" (click)="updateStatus(selectedOrder()!, 'Received')">Received</button>
+                  <button class="btn btn-sm btn-outline-info rounded-pill" (click)="updateStatus(selectedOrder()!, 'Confirmed', 20)">Confirmed</button>
+                  <button class="btn btn-sm btn-outline-warning rounded-pill" (click)="updateStatus(selectedOrder()!, 'Preparing', 15)">Preparing</button>
+                  <button class="btn btn-sm btn-outline-primary rounded-pill" (click)="updateStatus(selectedOrder()!, 'Out for Delivery', 10)">Out for Delivery</button>
+                  <button class="btn btn-sm btn-success rounded-pill" (click)="updateStatus(selectedOrder()!, 'Delivered', 0)">Delivered</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Delivery & Courier Simulation Details -->
+            <div class="col-12 col-md-5">
+              <h6 class="fw-bold text-dark mb-3">Rider & Dispatch Info</h6>
+
+              <!-- Driver Card -->
+              <div class="driver-card p-3 rounded-4 bg-light border border-light-subtle mb-3">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                  <div class="driver-avatar rounded-circle bg-dark text-white fw-bold d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                    RP
+                  </div>
+                  <div>
+                    <h6 class="fw-bold m-0 text-dark">Ramesh Patil</h6>
+                    <small class="text-muted"><i class="bi bi-star-fill text-warning"></i> 4.9 (840+ deliveries)</small>
+                  </div>
+                </div>
+                <div class="small text-muted mb-1"><i class="bi bi-bicycle me-1"></i> Vehicle: Hero Electric (KA-03-EM-9921)</div>
+                <div class="small text-muted mb-2"><i class="bi bi-telephone-outbound me-1"></i> Partner Contact: +91 99001 23456</div>
+                <div class="d-flex gap-2 mt-2">
+                  <a href="tel:9900123456" class="btn btn-sm btn-outline-dark rounded-pill flex-grow-1"><i class="bi bi-telephone"></i> Call Rider</a>
+                </div>
+              </div>
+
+              <!-- ETA Management -->
+              <div class="eta-box p-3 bg-light rounded-4 border border-light-subtle mb-3">
+                <span class="small fw-bold text-dark d-block mb-1">Adjust Delivery ETA</span>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="display-6 fw-bold text-dark">{{ selectedOrder()?.etaMinutes }}</span>
+                  <span class="text-muted fw-semibold">minutes remaining</span>
+                </div>
+                <div class="btn-group btn-group-sm w-100">
+                  <button class="btn btn-outline-secondary" (click)="adjustEta(selectedOrder()!, -5)">- 5 mins</button>
+                  <button class="btn btn-outline-secondary" (click)="adjustEta(selectedOrder()!, 5)">+ 5 mins</button>
+                  <button class="btn btn-outline-secondary" (click)="adjustEta(selectedOrder()!, 10)">+ 10 mins</button>
+                </div>
+              </div>
+
+              <!-- Customer Address snippet -->
+              <div class="p-3 bg-light rounded-4 border border-light-subtle small">
+                <span class="fw-bold text-dark d-block mb-1">Customer Delivery Destination</span>
+                <p class="m-0 text-muted">{{ selectedOrder()?.user?.address }}</p>
+                <div class="mt-2 text-dark fw-semibold">Recipient: {{ selectedOrder()?.user?.name }} ({{ selectedOrder()?.user?.phone }})</div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light px-4 py-3">
+          <button type="button" class="btn btn-secondary rounded-pill px-4" (click)="closeModals()">Close</button>
+          <button type="button" class="btn btn-primary rounded-pill px-4" (click)="openInvoice(selectedOrder()!)">View Invoice</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
+
+<!-- MODAL 2: Printable Order Invoice Dialog -->
+@if (showInvoiceModal() && selectedOrder()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+        <div class="modal-header bg-white py-3 px-4 border-bottom">
+          <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+            <span>🧾</span> Tax Invoice & Delivery Receipt
+          </h5>
+          <button type="button" class="btn-close" (click)="closeModals()" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body p-4 printable-invoice bg-white" id="invoice-printable-area">
+          <!-- Invoice Brand Header -->
+          <div class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4">
+            <div>
+              <h2 class="fw-bolder text-success m-0">🛒 INSTAMART</h2>
+              <small class="text-muted d-block mt-1">Superfast 10-Minute Grocery & Essentials</small>
+              <small class="text-muted d-block">GSTIN: 29AABCU9603R1ZX | Hub #01 Bengaluru</small>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-dark text-white px-3 py-1 font-monospace mb-2">INVOICE</span>
+              <h6 class="fw-bold m-0 text-dark">{{ selectedOrder()?.id }}</h6>
+              <small class="text-muted">{{ selectedOrder()?.date | date:'medium' }}</small>
+            </div>
+          </div>
+
+          <!-- Customer & Order Meta -->
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <span class="text-muted small fw-bold text-uppercase">Billed & Delivered To:</span>
+              <h6 class="fw-bold text-dark m-0 mt-1">{{ selectedOrder()?.user?.name }}</h6>
+              <div class="small text-muted">{{ selectedOrder()?.user?.phone }}</div>
+              <div class="small text-muted mt-1">{{ selectedOrder()?.user?.address }}</div>
+            </div>
+            <div class="col-6 text-end">
+              <span class="text-muted small fw-bold text-uppercase">Order Details:</span>
+              <div class="small text-dark fw-semibold mt-1">Status: <span class="badge bg-success-subtle text-success">{{ selectedOrder()?.status }}</span></div>
+              <div class="small text-muted">Payment: Cash on Delivery / UPI</div>
+              <div class="small text-muted">ETA: {{ selectedOrder()?.etaMinutes }} mins</div>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <div class="table-responsive mb-4">
+            <table class="table table-bordered align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Item Description</th>
+                  <th scope="col" class="text-center">Qty</th>
+                  <th scope="col" class="text-end">Unit Price</th>
+                  <th scope="col" class="text-end">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of selectedOrder()?.items; track item.product.id; let i = $index) {
+                  <tr>
+                    <td>{{ i + 1 }}</td>
+                    <td>
+                      <div class="fw-semibold text-dark">{{ item.product.title }}</div>
+                      <small class="text-muted">{{ item.product.brand }}</small>
+                    </td>
+                    <td class="text-center fw-bold">{{ item.quantity }}</td>
+                    <td class="text-end">₹{{ item.product.price | number:'1.2-2' }}</td>
+                    <td class="text-end fw-bold">₹{{ (item.product.price * item.quantity) | number:'1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4" class="text-end fw-semibold">Subtotal</td>
+                  <td class="text-end fw-semibold">₹{{ selectedOrder()?.total | number:'1.2-2' }}</td>
+                </tr>
+                <tr>
+                  <td colspan="4" class="text-end text-muted small">Delivery Fee</td>
+                  <td class="text-end text-success small fw-bold">FREE</td>
+                </tr>
+                <tr>
+                  <td colspan="4" class="text-end text-muted small">Taxes & Packaging</td>
+                  <td class="text-end text-muted small">₹0.00</td>
+                </tr>
+                <tr class="table-light">
+                  <td colspan="4" class="text-end fw-bolder fs-5 text-dark">Grand Total</td>
+                  <td class="text-end fw-bolder fs-5 text-success">₹{{ selectedOrder()?.total | number:'1.2-2' }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="text-center text-muted small mt-4 pt-3 border-top">
+            Thank you for shopping with Instamart! For customer support, visit instamart.com/help or call 1800-123-4567.
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light px-4 py-3">
+          <button type="button" class="btn btn-secondary rounded-pill px-4" (click)="closeModals()">Close</button>
+          <button type="button" class="btn btn-primary rounded-pill px-4 d-flex align-items-center gap-2" (click)="printInvoice()">
+            <i class="bi bi-printer-fill"></i>
+            <span>Print Invoice</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

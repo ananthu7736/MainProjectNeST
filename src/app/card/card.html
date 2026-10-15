@@ -14,10 +14,15 @@
       ₹{{ product.price }}
     </p>
 
-    <a class="btn btn-primary view-btn"
-       [routerLink]="['/productdetails', product.id]">
-      View Details
-    </a>
+    <div class="d-flex justify-content-between gap-2 mt-3">
+      <a class="btn btn-outline-primary view-btn w-50"
+         [routerLink]="['/productdetails', product.id]">
+        Details
+      </a>
+      <button class="btn btn-success add-btn w-50" (click)="addToCart($event)">
+        Add 🛒
+      </button>
+    </div>
 
   </div>
 </div>

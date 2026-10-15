@@ -1,0 +1,72 @@
+.success-card {
+  background: #ffffff;
+  border: none;
+}
+
+.success-icon {
+  font-size: 4rem;
+  animation: bounce 1.5s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.eta-box {
+  background-color: #f4fbf7 !important;
+  border: 1px solid #c7f3d6 !important;
+}
+
+.quantity-selector {
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  overflow: hidden;
+  max-width: 120px;
+}
+
+.quantity-selector button {
+  background: white;
+  color: #495057;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+}
+
+.quantity-selector button:hover {
+  background: #f8f9fa;
+  color: #000;
+}
+
+.quantity-selector span {
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.card {
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #198754;
+  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+.btn-success {
+  background-color: #198754;
+  border-color: #198754;
+  font-size: 1.1rem;
+}
+
+.btn-success:hover {
+  background-color: #146c43;
+  border-color: #13653f;
+}
+
+.order-details-box {
+  border: 1px solid #e9ecef;
+}

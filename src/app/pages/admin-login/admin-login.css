@@ -1,0 +1,46 @@
+.admin-login-wrapper {
+  background: radial-gradient(circle at top, #1e293b 0%, #0f172a 60%, #020617 100%);
+  min-height: 100vh;
+  width: 100%;
+}
+
+.admin-login-container {
+  width: 100%;
+  max-width: 480px;
+}
+
+.security-badge-icon {
+  width: 72px;
+  height: 72px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 2px solid rgba(245, 158, 11, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.tracking-wide {
+  letter-spacing: 0.08em;
+}
+
+.admin-login-card {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.admin-login-card .form-control {
+  padding: 0.75rem 1rem;
+}
+
+.admin-login-card .form-control:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 0.25rem rgba(245, 158, 11, 0.25);
+}
+
+.fs-8 {
+  font-size: 0.75rem;
+}
+
+.hover-light:hover {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+}

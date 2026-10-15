@@ -61,3 +61,14 @@
 .view-btn:hover {
   transform: scale(1.03);
 }
+
+.add-btn {
+  border-radius: 10px;
+  font-weight: 600;
+  padding: 10px;
+  transition: 0.3s;
+}
+
+.add-btn:hover {
+  transform: scale(1.03);
+}

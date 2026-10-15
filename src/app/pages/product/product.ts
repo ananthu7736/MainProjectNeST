@@ -20,9 +20,20 @@ constructor(
 ) {}
 
 ngOnInit() {
-  this.Api.getFakeProducts().subscribe((res: any) => {
-    this.data = res.products;
-    this.cdr.detectChanges();
+  this.Api.getFakeProducts().subscribe({
+    next: (res: any) => {
+      if (Array.isArray(res)) {
+        this.data = res;
+      } else if (res && Array.isArray(res.products)) {
+        this.data = res.products;
+      } else {
+        this.data = [];
+      }
+      this.cdr.detectChanges();
+    },
+    error: (err: any) => {
+      console.error('Error fetching products:', err);
+    }
   });
 }
 }
